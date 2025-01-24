@@ -1,0 +1,14 @@
+audio_classification_model_v3.h5
+audio_classification_model.h5
+best_random_forest_model.joblib
+encoder.joblib
+label_encoder_v3.pkl
+label_encoder.pkl
+model_info.json
+scaler.joblib
+
+
+test_v3.ipynb
+model_RF.ipynb
+
+/Useless_model/
