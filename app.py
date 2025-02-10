@@ -7,7 +7,6 @@ from tensorflow.keras.models import load_model
 
 app = Flask(__name__)
 
-# Dossier pour les fichiers téléchargés
 UPLOAD_FOLDER = 'static/uploads/'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -16,13 +15,12 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 model = load_model("audio_classification_model.h5")
 label_encoder = joblib.load("label_encoder.pkl")
 
-#model = load_model("audio_classification_model.h5")
-# Charger le modèle et le scaler
+
 mode = joblib.load('best_random_forest_model.joblib')
 scaler = joblib.load('scaler.joblib')
-encoder = joblib.load('encoder.joblib')  # Assurez-vous d'avoir un encodeur pour inverser la transformation
+encoder = joblib.load('encoder.joblib') 
 
-# Map des aliments vers leurs ingrédients
+
 food_to_ingredients = {
     "amlou": ["بالطريقة التقليدية، نأخذ اللوز محمر ثم يتم طحنه في أزرݣ مع زيت أرݣان"],
     "ourimken": ["الحمص - الفول - الشعرية - الروز - اللوبية - الدشيشة - الݣديديوضع في الطنجرة مع المياه حتى يطهى ثم نضيف أخيرا القليل من الطحين"],
@@ -48,15 +46,12 @@ def process_audio_with_model(audio_file_path):
     if features is None:
         return "unknown"
 
-    # Reshape features to match the input shape of the model
-    features = np.expand_dims(features, axis=-1)  # Add channel dimension
-    features = np.expand_dims(features, axis=0)   # Add batch dimension
+    features = np.expand_dims(features, axis=-1)
+    features = np.expand_dims(features, axis=0)  
 
-    # Predict with the TensorFlow model
     predictions = model.predict(features)
     predicted_class = np.argmax(predictions, axis=1)[0]
 
-    # Map the prediction index to the corresponding class name
     label_mapping = {0: "amlou", 1: "ourimken", 2: "tagala"}
     return label_mapping.get(predicted_class, "unknown")
 
@@ -89,20 +84,16 @@ def upload():
         return jsonify({"error": "No selected file"})
     
     if file:
-        # Sauvegarder le fichier audio téléchargé
         audio_file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
         file.save(audio_file_path)
     
-        # Processus de prédiction sur l'audio
         food_name = process_audio_with_model(audio_file_path)
         
         if food_name == "unknown" or food_name not in food_to_ingredients:
             return render_template('index.html', error_message="Je ne reconnais pas ce plat. Veuillez réessayer.")
         
-        # Obtenir les ingrédients pour le nom de l'aliment prédit
         ingredients = get_ingredients(food_name)
         
-        # Trouver les images associées aux ingrédients
         ingredient_images = []
         for ingredient in ingredients:
             image_path = os.path.join('static/images', f"{food_name.lower()}.jpg")
